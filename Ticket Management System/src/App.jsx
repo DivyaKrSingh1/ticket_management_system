@@ -10,7 +10,7 @@ import Dashboard from './pages/Dashboard';
 import AllTickets from './pages/AllTickets';
 import MyTickets from './pages/MyTickets';
 import CreateTicket from './pages/CreateTicket';
-import Reports from './pages/Reports';
+import Reports from './pages/Report';
 
 function App() {
     return (
