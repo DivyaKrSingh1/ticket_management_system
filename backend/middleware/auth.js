@@ -1,17 +1,16 @@
 const jwt = require('jsonwebtoken');
-
 const SECRET_KEY = process.env.SECRET_KEY;
-
-
 
 const auth = (req, res, next) => {
     try {
-        const token = req.headers.authorization?.split(' ')[1];
-
+        const authHeader = req.headers.authorization;
+        if (!authHeader) {
+            return res.status(401).json({ message: 'Authentication required' });
+        }
+        const token = authHeader.split(' ');
         if (!token) {
             return res.status(401).json({ message: 'Authentication required' });
         }
-
         const decoded = jwt.verify(token, SECRET_KEY);
         req.user = decoded;
         next();

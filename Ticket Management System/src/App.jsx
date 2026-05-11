@@ -10,7 +10,10 @@ import Dashboard from './pages/Dashboard';
 import AllTickets from './pages/AllTickets';
 import MyTickets from './pages/MyTickets';
 import CreateTicket from './pages/CreateTicket';
-import Reports from './pages/Reports';
+import Reports from './pages/Report';
+import AdminDashboard from './pages/AdminDashboard';
+import AdminUsers from './pages/AdminUsers';
+import AdminTickets from './pages/AdminTickets';
 
 function App() {
     return (
@@ -27,6 +30,9 @@ function App() {
                         <Route path="/my-tickets" element={<PrivateRoute><MyTickets /></PrivateRoute>} />
                         <Route path="/create-ticket" element={<PrivateRoute><CreateTicket /></PrivateRoute>} />
                         <Route path="/reports" element={<PrivateRoute><Reports /></PrivateRoute>} />
+                        <Route path="/admin" element={<PrivateRoute><AdminDashboard /></PrivateRoute>} />
+                        <Route path="/admin/users" element={<PrivateRoute><AdminUsers /></PrivateRoute>} />
+                        <Route path="/admin/tickets" element={<PrivateRoute><AdminTickets /></PrivateRoute>} />
                         <Route path="*" element={<Navigate to="/login" replace />} />
                     </Routes>
                 </main>

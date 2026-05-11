@@ -4,6 +4,7 @@ const Header = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const token = localStorage.getItem('token');
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
 
     const handleLogout = () => {
         localStorage.removeItem('token');
@@ -11,10 +12,7 @@ const Header = () => {
         navigate('/login');
     };
 
-    // Hide header on login and signup pages
     if (location.pathname === '/login' || location.pathname === '/signup') return null;
-
-    // Hide header if not logged in
     if (!token) return null;
 
     return (
@@ -25,6 +23,11 @@ const Header = () => {
                     <Link to="/dashboard" className="hover:bg-indigo-700 px-4 py-2 rounded text-sm">
                         Dashboard
                     </Link>
+                    {user.role === 'admin' && (
+                        <Link to="/admin" className="hover:bg-red-700 bg-red-600 px-4 py-2 rounded text-sm">
+                            Admin Panel
+                        </Link>
+                    )}
                     <button onClick={handleLogout} className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded text-sm">
                         Logout
                     </button>

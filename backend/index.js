@@ -1,13 +1,9 @@
-//  dksingh8957_db_user
-//  bJ3RAv2Znyw2x6vN
-//  mongodb+srv://dksingh8957_db_user:bJ3RAv2Znyw2x6vN@cluster0.nkcryfl.mongodb.net/
-
 require('dotenv').config();
 
 const express = require('express');
 const app = express();
 
-// middleware
+// Middleware FIRST
 const cors = require('cors');
 app.use(cors({
     origin: ['http://localhost:5173', 'https://ticket-management-system-2-e7eb.onrender.com'],
@@ -23,6 +19,7 @@ mongoose.connect('mongodb://dksingh8957_db_user:bJ3RAv2Znyw2x6vN@ac-k3j1p5w-shar
 .then((res) => { console.log("DB CONNECTED") })
 .catch((err) => { console.log(err) })
 
+// Routes AFTER middleware
 const userRoutes = require('./routes/userRoutes');
 app.use('/api', userRoutes);
 
@@ -32,8 +29,10 @@ app.use('/api', ticketRoutes);
 const reportRoutes = require('./routes/reportRoutes');
 app.use('/api', reportRoutes);
 
+const adminRoutes = require('./routes/adminRoutes');
+app.use('/api', adminRoutes);
+
 const PORT = process.env.PORT || 3030;
 app.listen(PORT, () => {
     console.log(`SERVER IS CONNECTED AT PORT: ${PORT}`);
 });
-
