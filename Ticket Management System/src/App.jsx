@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Header from './components/Header';
@@ -10,7 +10,7 @@ import Dashboard from './pages/Dashboard';
 import AllTickets from './pages/AllTickets';
 import MyTickets from './pages/MyTickets';
 import CreateTicket from './pages/CreateTicket';
-import Reports from './pages/Report';
+import Reports from './pages/Reports';
 
 function App() {
     return (
@@ -19,6 +19,7 @@ function App() {
                 <Header />
                 <main className="flex-1 bg-gray-100 py-6">
                     <Routes>
+                        <Route path="/" element={<Navigate to="/login" replace />} />
                         <Route path="/login" element={<Login />} />
                         <Route path="/signup" element={<Signup />} />
                         <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
@@ -26,7 +27,7 @@ function App() {
                         <Route path="/my-tickets" element={<PrivateRoute><MyTickets /></PrivateRoute>} />
                         <Route path="/create-ticket" element={<PrivateRoute><CreateTicket /></PrivateRoute>} />
                         <Route path="/reports" element={<PrivateRoute><Reports /></PrivateRoute>} />
-                        <Route path="*" element={<Login />} />
+                        <Route path="*" element={<Navigate to="/login" replace />} />
                     </Routes>
                 </main>
                 <Footer />

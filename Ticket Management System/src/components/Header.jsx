@@ -1,17 +1,20 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 
 const Header = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const token = localStorage.getItem('token');
 
     const handleLogout = () => {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         navigate('/login');
-        window.location.reload();
     };
 
-    // Don't show header on login/signup pages
+    // Hide header on login and signup pages
+    if (location.pathname === '/login' || location.pathname === '/signup') return null;
+
+    // Hide header if not logged in
     if (!token) return null;
 
     return (
