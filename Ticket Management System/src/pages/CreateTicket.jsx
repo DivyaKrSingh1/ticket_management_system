@@ -3,33 +3,108 @@ import { toast } from 'react-toastify';
 import API from '../services/api';
 
 const CreateTicket = () => {
-    const [formData, setFormData] = useState({ title: '', description: '' });
+
+    const [formData, setFormData] = useState({
+        title: '',
+        description: '',
+        image: null
+    });
+
+    const [preview, setPreview] = useState('');
+
     const [loading, setLoading] = useState(false);
 
     const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+
+        if (e.target.name === 'image') {
+
+            const file = e.target.files[0];
+
+            setFormData({
+                ...formData,
+                image: file
+            });
+
+            if (file) {
+                setPreview(URL.createObjectURL(file));
+            }
+
+        } else {
+
+            setFormData({
+                ...formData,
+                [e.target.name]: e.target.value
+            });
+        }
     };
 
     const handleSubmit = async (e) => {
+
         e.preventDefault();
+
         setLoading(true);
+
         try {
-            const res = await API.post('/ticket/create', formData);
+
+            const data = new FormData();
+
+            data.append('title', formData.title);
+
+            data.append('description', formData.description);
+
+            if (formData.image) {
+                data.append('image', formData.image);
+            }
+
+            await API.post('/ticket/create', data, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+
             toast.success('Ticket created successfully!');
-            setFormData({ title: '', description: '' });
+
+            setFormData({
+                title: '',
+                description: '',
+                image: null
+            });
+
+            setPreview('');
+
         } catch (error) {
-            toast.error(error.response?.data?.message || 'Error creating ticket');
+
+            toast.error(
+                error.response?.data?.message ||
+                'Error creating ticket'
+            );
+
         } finally {
+
             setLoading(false);
         }
     };
 
     return (
+
         <div className="max-w-xl mx-auto mt-10 bg-white p-8 rounded-xl shadow-lg">
-            <h2 className="text-2xl font-bold text-indigo-900 mb-6">Create New Ticket</h2>
-            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+
+            <h2 className="text-2xl font-bold text-indigo-900 mb-6">
+                Create New Ticket
+            </h2>
+
+            <form
+                onSubmit={handleSubmit}
+                className="flex flex-col gap-4"
+            >
+
+                {/* TITLE */}
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Title
+                    </label>
+
                     <input
                         type="text"
                         name="title"
@@ -40,8 +115,14 @@ const CreateTicket = () => {
                         className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
                     />
                 </div>
+
+                {/* DESCRIPTION */}
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Description
+                    </label>
+
                     <textarea
                         name="description"
                         placeholder="Enter ticket description"
@@ -52,6 +133,35 @@ const CreateTicket = () => {
                         className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
                     />
                 </div>
+
+                {/* IMAGE */}
+                <div>
+
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Upload Image
+                    </label>
+
+                    <input
+                        type="file"
+                        name="image"
+                        accept="image/*"
+                        onChange={handleChange}
+                        className="w-full p-2 border border-gray-300 rounded-lg"
+                    />
+                </div>
+
+                {/* IMAGE PREVIEW */}
+                {
+                    preview && (
+                        <img
+                            src={preview}
+                            alt="preview"
+                            className="w-40 h-40 object-cover rounded-lg border"
+                        />
+                    )
+                }
+
+                {/* BUTTON */}
                 <button
                     type="submit"
                     disabled={loading}
@@ -59,6 +169,7 @@ const CreateTicket = () => {
                 >
                     {loading ? 'Creating...' : 'Create Ticket'}
                 </button>
+
             </form>
         </div>
     );
