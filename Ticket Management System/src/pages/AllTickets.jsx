@@ -7,6 +7,7 @@ const AllTickets = () => {
     const [statusFilter, setStatusFilter] = useState('');
     const [employeeFilter, setEmployeeFilter] = useState('');
     const [loading, setLoading] = useState(false);
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
 
     const fetchTickets = async () => {
         setLoading(true);
@@ -117,27 +118,31 @@ const AllTickets = () => {
                             {ticket.resolutionNote && (
                                 <p className="mt-2 text-sm text-green-700"><strong>Resolution:</strong> {ticket.resolutionNote}</p>
                             )}
-                            <div className="mt-4 flex gap-3">
-                                <select
-                                    onChange={(e) => handleStatusUpdate(ticket._id, e.target.value)}
-                                    defaultValue=""
-                                    className="p-2 border border-gray-300 rounded-lg text-sm"
-                                >
-                                    <option value="" disabled>Change Status</option>
-                                    <option value="OPEN">OPEN</option>
-                                    <option value="IN PROGRESS">IN PROGRESS</option>
-                                    <option value="RESOLVED">RESOLVED</option>
-                                    <option value="CLOSED">CLOSED</option>
-                                    <option value="ON HOLD">ON HOLD</option>
-                                    <option value="REOPENED">REOPENED</option>
-                                </select>
-                                <button
-                                    onClick={() => handleDelete(ticket._id)}
-                                    className="bg-red-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-red-700"
-                                >
-                                    Delete
-                                </button>
-                            </div>
+
+                            {/* Only Admin Can See These Actions */}
+                            {user.role === 'admin' && (
+                                <div className="mt-4 flex gap-3">
+                                    <select
+                                        onChange={(e) => handleStatusUpdate(ticket._id, e.target.value)}
+                                        defaultValue=""
+                                        className="p-2 border border-gray-300 rounded-lg text-sm"
+                                    >
+                                        <option value="" disabled>Change Status</option>
+                                        <option value="OPEN">OPEN</option>
+                                        <option value="IN PROGRESS">IN PROGRESS</option>
+                                        <option value="RESOLVED">RESOLVED</option>
+                                        <option value="CLOSED">CLOSED</option>
+                                        <option value="ON HOLD">ON HOLD</option>
+                                        <option value="REOPENED">REOPENED</option>
+                                    </select>
+                                    <button
+                                        onClick={() => handleDelete(ticket._id)}
+                                        className="bg-red-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-red-700"
+                                    >
+                                        Delete
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     )) : (
                         <p className="text-gray-500">No tickets found</p>

@@ -1,4 +1,4 @@
-const { Ticket } = require('../../models/Ticket');
+const Ticket = require('../../models/Ticket');
 const User = require('../../models/User');
 
 // GET ALL USERS
@@ -115,7 +115,6 @@ const getAdminStats = async (req, res) => {
         const resolvedTickets = await Ticket.countDocuments({ status: 'RESOLVED' });
         const closedTickets = await Ticket.countDocuments({ status: 'CLOSED' });
 
-        // Per employee ticket count
         const employees = await User.find({ role: 'employee' }).select('name email');
         const employeeStats = [];
         for (let emp of employees) {
