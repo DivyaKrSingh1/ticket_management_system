@@ -9,11 +9,11 @@ const userSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 
-const User = mongoose.model('User', userSchema);
+const UserModel = mongoose.model('User', userSchema);
 
 // Function to get user by email
 const getUserByEmail = async (email) => {
-    const user = await User.findOne({ email });
+    const user = await UserModel.findOne({ email });
     if (user) {
         return user;
     }
@@ -23,16 +23,44 @@ const getUserByEmail = async (email) => {
 // Function to create new user
 const createUser = async (name, email, password ) => {
     const hashedPassword = await bcrypt.hash(password, 10);
-    const user = new User({ name, email, password:hashedPassword });
+    console.log(UserModel);
+    console.log(typeof UserModel);
+    const user = new UserModel({ name, email, password:hashedPassword });
     await user.save();
     return user;
 };
 
 const getAllUsers = async () => {
-     const users = await User.find();
-     return users;
-    };
-   
+    const users = await UserModel.find();
+    return users;
+};
+
+const getAllUsersForAdmin = async () => {
+    return await UserModel.find().select('-password');
+};
+
+const updateUserRoleById = async (userId, role) => {
+    return await UserModel.findByIdAndUpdate(userId, { role }, { new: true }).select('-password');
+};
+
+const editUserById = async (userId, name, email) => {
+    return await UserModel.findByIdAndUpdate(userId, { name, email }, { new: true }).select('-password');
+};
+
+const deleteUserById = async (userId) => {
+    return await UserModel.findByIdAndDelete(userId);
+};
+
+const getUserStats = async () => {
+    const totalUsers = await UserModel.countDocuments();
+    const totalAdmins = await UserModel.countDocuments({ role: 'admin' });
+    const totalEmployees = await UserModel.countDocuments({ role: 'employee' });
+    return { totalUsers, totalAdmins, totalEmployees };
+};
+
+const getEmployees = async () => {
+    return await UserModel.find({ role: 'employee' }).select('name email');
+};
 
 // Function to compare password
 const comparePassword = async (enteredPassword, hashedPassword) => {
@@ -40,4 +68,17 @@ const comparePassword = async (enteredPassword, hashedPassword) => {
     return isMatch;
 };
 
-module.exports = { getUserByEmail, createUser, comparePassword, getAllUsers, User };
+module.exports = {
+    getUserByEmail,
+    createUser,
+    comparePassword,
+    getAllUsers,
+    getAllUsersForAdmin,
+    updateUserRoleById,
+    editUserById,
+    deleteUserById,
+    getUserStats,
+    getEmployees,
+    UserModel,
+    User: UserModel
+};

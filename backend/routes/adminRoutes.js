@@ -2,15 +2,13 @@ const express = require('express');
 const router = express.Router();
 const { auth } = require('../middleware/auth');
 const { adminAuth } = require('../middleware/adminAuth');
-const {
-    getAllUsers,
-    updateUserRole,
-    editUser,
-    deleteUser,
-    reassignTicket,
-    editTicket,
-    getAdminStats
-} = require('../controllers/adminControllers/adminController');
+const { getAdminStats } = require('../controllers/adminControllers/getAdminStats');
+const { getAllUsers } = require('../controllers/adminControllers/getAllUsers');
+const { updateUserRole } = require('../controllers/adminControllers/updateUserRole');
+const { editUser } = require('../controllers/adminControllers/editUser');
+const { deleteUser } = require('../controllers/adminControllers/deleteUser');
+const { reassignTicket } = require('../controllers/adminControllers/reassignTicket');
+const { editTicket } = require('../controllers/adminControllers/editTicket');
 
 // All admin routes require auth + adminAuth
 router.get('/admin/stats', auth, adminAuth, getAdminStats);

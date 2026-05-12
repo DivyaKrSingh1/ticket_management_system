@@ -88,6 +88,44 @@ const updateTicket = async (ticket, { status, resolutionNote }) => {
     return ticket;
 };
 
+const reassignTicketById = async (ticketId, assignedTo) => {
+    return await Ticket.findByIdAndUpdate(
+        ticketId,
+        { assignedTo },
+        { new: true }
+    ).populate('assignedTo', 'name email').populate('createdBy', 'name email');
+};
+
+const editTicketById = async (ticketId, updateData) => {
+    return await Ticket.findByIdAndUpdate(ticketId, updateData, { new: true })
+        .populate('assignedTo', 'name email')
+        .populate('createdBy', 'name email');
+};
+
+const getTicketStats = async () => {
+    const totalTickets = await Ticket.countDocuments();
+    const openTickets = await Ticket.countDocuments({ status: 'OPEN' });
+    const inProgressTickets = await Ticket.countDocuments({ status: 'IN PROGRESS' });
+    const resolvedTickets = await Ticket.countDocuments({ status: 'RESOLVED' });
+    const closedTickets = await Ticket.countDocuments({ status: 'CLOSED' });
+    return { totalTickets, openTickets, inProgressTickets, resolvedTickets, closedTickets };
+};
+
+const getEmployeeTicketStats = async (employees) => {
+    const employeeStats = [];
+    for (let emp of employees) {
+        const assignedCount = await Ticket.countDocuments({ assignedTo: emp._id });
+        const resolvedCount = await Ticket.countDocuments({ assignedTo: emp._id, status: 'RESOLVED' });
+        employeeStats.push({
+            name: emp.name,
+            email: emp.email,
+            totalAssigned: assignedCount,
+            resolved: resolvedCount
+        });
+    }
+    return employeeStats;
+};
+
 module.exports = {
     Ticket,
     getActiveTicketCount,
@@ -96,5 +134,9 @@ module.exports = {
     getTicketsByFilter,
     getTicketsByUserId,
     getTicketById,
-    updateTicket
+    updateTicket,
+    reassignTicketById,
+    editTicketById,
+    getTicketStats,
+    getEmployeeTicketStats
 };

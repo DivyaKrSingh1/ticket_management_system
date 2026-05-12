@@ -1,7 +1,5 @@
-const { getUserByEmail } = require('../../models/User');
-const bcrypt = require('bcrypt');
+const { getUserByEmail, createUser } = require('../../models/User');
 const jwt = require('jsonwebtoken');
-const User = require('../../models/User');
 const SECRET_KEY = process.env.SECRET_KEY || 'ticket_management_secret_2026';
 
 const signup = async (req, res) => {
@@ -9,12 +7,14 @@ const signup = async (req, res) => {
         const { name, email, password } = req.body;
 
         const existingUser = await getUserByEmail(email);
+        console.log('existingUser', JSON.stringify(existingUser));
         if (existingUser) {
             return res.status(400).json({ message: 'User already exists' });
         }
 
-        const user = new User({ name, email, password });
-        await user.save();
+        const user = await createUser(name, email, password);
+        console.log('user', JSON.stringify(user));
+        
 
         const token = jwt.sign(
             { id: user._id, role: user.role },
