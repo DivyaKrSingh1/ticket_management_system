@@ -7,7 +7,8 @@ const auth = (req, res, next) => {
         if (!authHeader) {
             return res.status(401).json({ message: 'Authentication required' });
         }
-        const token = authHeader.split(' ');  // ←  gets the token after "Bearer"
+        const parts = authHeader.split(' ');
+        const token = parts;
         if (!token) {
             return res.status(401).json({ message: 'Authentication required' });
         }
