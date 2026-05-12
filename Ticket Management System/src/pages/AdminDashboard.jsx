@@ -33,7 +33,7 @@ const AdminDashboard = () => {
             </div>
 
             {/* Quick Navigation */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
                 <div onClick={() => navigate('/admin/users')} className="bg-white p-6 rounded-xl shadow hover:shadow-lg cursor-pointer border-l-4 border-blue-500 transition-all hover:-translate-y-1">
                     <h3 className="text-lg font-bold text-gray-800 mb-1">👥 Manage Users</h3>
                     <p className="text-sm text-gray-500">View, edit, assign roles, delete users</p>
@@ -42,10 +42,7 @@ const AdminDashboard = () => {
                     <h3 className="text-lg font-bold text-gray-800 mb-1">🎫 Manage Tickets</h3>
                     <p className="text-sm text-gray-500">Edit, reassign, force close tickets</p>
                 </div>
-                <div onClick={() => navigate('/dashboard')} className="bg-white p-6 rounded-xl shadow hover:shadow-lg cursor-pointer border-l-4 border-purple-500 transition-all hover:-translate-y-1">
-                    <h3 className="text-lg font-bold text-gray-800 mb-1">📊 Employee View</h3>
-                    <p className="text-sm text-gray-500">Switch to employee dashboard</p>
-                </div>
+                
             </div>
 
             {/* Stats */}
