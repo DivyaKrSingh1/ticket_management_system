@@ -90,7 +90,34 @@ const AdminTickets = () => {
                                     {ticket.status}
                                 </span>
                             </div>
-                            <p className="text-gray-600 mt-2">{ticket.description}</p>
+                           <p className="text-gray-600 mt-2">
+    {ticket.description}
+</p>
+
+{
+    ticket.image && (
+
+        <div className="mt-4">
+
+            <img
+                src={`https://ticket-management-system-1-8q08.onrender.com${ticket.image}`}
+                alt="ticket"
+                className="w-72 h-72 object-cover rounded-xl border cursor-pointer hover:scale-105 transition duration-300"
+                onClick={() =>
+                    window.open(
+                        `https://ticket-management-system-1-8q08.onrender.com${ticket.image}`,
+                        '_blank'
+                    )
+                }
+            />
+
+            <p className="text-xs text-gray-500 mt-1">
+                Click image to view full size
+            </p>
+
+        </div>
+    )
+}
                             <div className="mt-3 text-sm text-gray-500">
                                 <span><strong>Created By:</strong> {ticket.createdBy?.name}</span>
                                 <span className="ml-4"><strong>Assigned To:</strong> {ticket.assignedTo?.name || 'Unassigned'}</span>
