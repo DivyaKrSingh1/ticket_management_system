@@ -12,9 +12,10 @@ const ticketSchema = new mongoose.Schema({
         required: true
     },
 
+    // FIXED TICKET NUMBER
     ticketNumber: {
-         type: Number,
-         unique: true
+        type: Number,
+        default: 0
     },
 
     image: {
@@ -58,7 +59,7 @@ const ticketSchema = new mongoose.Schema({
 const Ticket = mongoose.model('Ticket', ticketSchema);
 
 
-// Function to get ticket count for an employee (excluding CLOSED)
+// Function to get ticket count for an employee
 const getActiveTicketCount = async (employeeId) => {
 
     const count = await Ticket.countDocuments({
@@ -94,7 +95,7 @@ const findEmployeeWithLowestTickets = async (employees) => {
 };
 
 
-// Function to create a new ticket
+// CREATE NEW TICKET
 const createNewTicket = async ({
     title,
     description,
@@ -103,16 +104,16 @@ const createNewTicket = async ({
     image
 }) => {
 
-    // Find last ticket
-    const lastTicket = await Ticket
-        .findOne()
-        .sort({ ticketNumber: -1 });
+  // GET LAST TICKET
+const lastTicket = await Ticket
+    .findOne()
+    .sort({ ticketNumber: -1 });
 
-    // Generate next ticket number
-    const nextTicketNumber =
-        lastTicket
-            ? lastTicket.ticketNumber + 1
-            : 1;
+// NEXT NUMBER
+const nextTicketNumber =
+    lastTicket?.ticketNumber
+        ? lastTicket.ticketNumber + 1
+        : 1;
 
     const ticket = new Ticket({
 
@@ -128,11 +129,13 @@ const createNewTicket = async ({
 
     await ticket.save();
 
+    console.log(ticket);
+
     return ticket;
 };
 
 
-// Function to get tickets with filter (populated)
+// GET TICKETS
 const getTicketsByFilter = async (filter) => {
 
     const tickets = await Ticket.find(filter)
@@ -147,7 +150,7 @@ const getTicketsByFilter = async (filter) => {
 };
 
 
-// Function to get tickets assigned to a specific user
+// GET USER TICKETS
 const getTicketsByUserId = async (userId) => {
 
     const tickets = await Ticket.find({
@@ -158,13 +161,11 @@ const getTicketsByUserId = async (userId) => {
 
     .sort({ createdAt: -1 });
 
-    console.log('tickets', tickets);
-
     return tickets;
 };
 
 
-// Function to find ticket by ID
+// FIND TICKET
 const getTicketById = async (ticketId) => {
 
     const ticket = await Ticket.findById(ticketId);
@@ -173,7 +174,7 @@ const getTicketById = async (ticketId) => {
 };
 
 
-// Function to update ticket status
+// UPDATE TICKET
 const updateTicket = async (
     ticket,
     { status, resolutionNote }
@@ -194,6 +195,7 @@ const updateTicket = async (
 };
 
 
+// REASSIGN
 const reassignTicketById = async (
     ticketId,
     assignedTo
@@ -215,6 +217,7 @@ const reassignTicketById = async (
 };
 
 
+// EDIT
 const editTicketById = async (
     ticketId,
     updateData
@@ -236,6 +239,7 @@ const editTicketById = async (
 };
 
 
+// STATS
 const getTicketStats = async () => {
 
     const totalTickets =
@@ -271,6 +275,7 @@ const getTicketStats = async () => {
 };
 
 
+// EMPLOYEE STATS
 const getEmployeeTicketStats = async (employees) => {
 
     const employeeStats = [];

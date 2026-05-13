@@ -37,10 +37,14 @@ const createTicket = async (req, res) => {
                 : null
         });
 
-        res.status(201).json({
-            message: 'Ticket created successfully',
-            ticket
-        });
+      res.status(201).json({
+    success: true,
+    message: 'Ticket created successfully',
+    ticket: {
+        ...ticket._doc,
+        ticketNumber: ticket.ticketNumber
+    }
+});
 
     } catch (error) {
 
