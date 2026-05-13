@@ -12,6 +12,11 @@ const ticketSchema = new mongoose.Schema({
         required: true
     },
 
+    ticketNumber: {
+         type: Number,
+         unique: true
+    },
+
     image: {
         type: String
     },
@@ -98,10 +103,24 @@ const createNewTicket = async ({
     image
 }) => {
 
+    // Find last ticket
+    const lastTicket = await Ticket
+        .findOne()
+        .sort({ ticketNumber: -1 });
+
+    // Generate next ticket number
+    const nextTicketNumber =
+        lastTicket
+            ? lastTicket.ticketNumber + 1
+            : 1;
+
     const ticket = new Ticket({
 
         title,
         description,
+
+        ticketNumber: nextTicketNumber,
+
         createdBy,
         assignedTo,
         image

@@ -246,9 +246,15 @@ const AllTickets = () => {
 
                                         <div className="flex justify-between items-start">
 
-                                            <h3 className="text-lg font-bold text-indigo-900">
-                                                {ticket.title}
-                                            </h3>
+                                          <div>
+    <p className="text-sm text-indigo-600 font-semibold">
+        TICKET-{ticket.ticketNumber}
+    </p>
+
+    <h3 className="text-lg font-bold text-indigo-900">
+        {ticket.title}
+    </h3>
+</div>
 
                                             <span
                                                 className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(ticket.status)}`}

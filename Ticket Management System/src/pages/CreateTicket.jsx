@@ -56,13 +56,15 @@ const CreateTicket = () => {
                 data.append('image', formData.image);
             }
 
-            await API.post('/ticket/create', data, {
+           const res = await API.post('/ticket/create', data, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
                 }
             });
 
-            toast.success('Ticket created successfully!');
+           toast.success(
+                `Ticket TICKET-${res.data.ticket.ticketNumber} created successfully!`
+            );
 
             setFormData({
                 title: '',
