@@ -49,6 +49,12 @@ app.use('/api', reportRoutes);
 const adminRoutes = require('./routes/adminRoutes');
 app.use('/api', adminRoutes);
 
+const attendanceRoutes = require('./routes/attendanceRoutes');
+const warehouseRoutes = require('./routes/warehouseRoutes');
+
+app.use('/api/attendance', attendanceRoutes);
+app.use('/api/warehouse', warehouseRoutes);
+
 const PORT = process.env.PORT || 3030;
 
 app.listen(PORT, () => {
