@@ -191,17 +191,17 @@ const MarkAttendance = () => {
                         )
                       }
                     >
-                      <option value="full_day">
-                        Full Day
-                      </option>
+ <option value="P">
+  Full Day
+</option>
 
-                      <option value="half_day">
-                        Half Day
-                      </option>
+<option value="HD">
+  Half Day
+</option>
 
-                      <option value="absent">
-                        Absent
-                      </option>
+<option value="A">
+  Absent
+</option>
                     </select>
                   </td>
                 </tr>
