@@ -21,12 +21,12 @@ const attendanceSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: [
-        'full_day',
-        'half_day',
-        'absent',
-      ],
-      required: true,
+        enum: [
+         'P',
+         'HD',
+         'A',
+        ],
+      default: 'P',
     },
 
     markedBy: {

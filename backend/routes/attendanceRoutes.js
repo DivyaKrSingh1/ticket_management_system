@@ -21,6 +21,12 @@ const {
   getWarehouseEmployees,
 } = require('../controllers/attendanceControllers/getWarehouseEmployees');
 
+const {
+  getMonthlyAttendance,
+} = require(
+  '../controllers/attendanceControllers/getMonthlyAttendance'
+);
+
 // MARK ATTENDANCE
 router.post(
   '/mark',
@@ -51,6 +57,14 @@ router.get(
   auth,
   adminAuth,
   getWarehouseEmployees
+);
+
+// GET MONTHLY ATTENDANCE
+router.get(
+  '/monthly',
+  auth,
+  adminAuth,
+  getMonthlyAttendance
 );
 
 module.exports = router;

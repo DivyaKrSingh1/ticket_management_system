@@ -76,3 +76,18 @@ export const getEmployeeAttendance =
       `/attendance/employee/${id}`
     );
   };
+
+  // GET MONTHLY ATTENDANCE REPORT
+export const getMonthlyAttendance =
+  async (
+    warehouseId,
+    month,
+    year
+  ) => {
+
+    return await API.get(
+
+      `/attendance/monthly?warehouseId=${warehouseId}&month=${month}&year=${year}`
+
+    );
+  };

@@ -9,6 +9,7 @@ import autoTable from 'jspdf-autotable';
 import {
   getWarehouses,
   getAttendanceByDate,
+  getMonthlyAttendance,
   markAttendance,
 } from '../../services/attendanceApi';
 
@@ -31,6 +32,21 @@ const AttendanceHistory = () => {
       .toISOString()
       .split('T')[0]
   );
+
+  const currentDate = new Date();
+
+  const [month, setMonth] =
+    useState(
+      currentDate.getMonth() + 1
+    );
+
+  const [year, setYear] =
+    useState(
+      currentDate.getFullYear()
+    );
+
+  const [reportType, setReportType] =
+    useState('daily');
 
   const [loading, setLoading] =
     useState(false);
@@ -68,10 +84,7 @@ const AttendanceHistory = () => {
   const fetchAttendance =
     async () => {
 
-      if (
-        !selectedWarehouse ||
-        !date
-      ) {
+      if (!selectedWarehouse) {
         return;
       }
 
@@ -79,11 +92,27 @@ const AttendanceHistory = () => {
 
       try {
 
-        const res =
-          await getAttendanceByDate(
-            selectedWarehouse,
-            date
-          );
+        let res;
+
+        if (
+          reportType === 'daily'
+        ) {
+
+          res =
+            await getAttendanceByDate(
+              selectedWarehouse,
+              date
+            );
+
+        } else {
+
+          res =
+            await getMonthlyAttendance(
+              selectedWarehouse,
+              month,
+              year
+            );
+        }
 
         setAttendanceData(
           res.data.attendance
@@ -106,7 +135,13 @@ const AttendanceHistory = () => {
 
     fetchAttendance();
 
-  }, [selectedWarehouse, date]);
+  }, [
+    selectedWarehouse,
+    date,
+    month,
+    year,
+    reportType,
+  ]);
 
   const handleStatusChange = (
     index,
@@ -162,80 +197,311 @@ const AttendanceHistory = () => {
       }
     };
 
-  const handleDownloadPDF =
-    () => {
+ const handleDownloadPDF =
+  () => {
 
-      const doc = new jsPDF();
+    const doc = new jsPDF(
+      'landscape',
+      'mm',
+      'a4'
+    );
 
-      doc.setFontSize(18);
+    doc.setFontSize(16);
 
-      doc.text(
-        'Attendance Report',
-        14,
-        20
+    doc.text(
+      'Monthly Attendance Report',
+      10,
+      10
+    );
+
+    const warehouseName =
+      warehouses.find(
+        (w) =>
+          w._id ===
+          selectedWarehouse
+      )?.name || '';
+
+    doc.setFontSize(10);
+
+    doc.text(
+      `Warehouse: ${warehouseName}`,
+      10,
+      18
+    );
+
+    doc.text(
+      `Month: ${
+        [
+          'January',
+          'February',
+          'March',
+          'April',
+          'May',
+          'June',
+          'July',
+          'August',
+          'September',
+          'October',
+          'November',
+          'December',
+        ][month - 1]
+      } ${year}`,
+      10,
+      24
+    );
+
+    const groupedEmployees =
+      Object.values(
+
+        attendanceData.reduce(
+          (
+            acc,
+            item
+          ) => {
+
+            const userId =
+              item.user?._id;
+
+            if (
+              !acc[userId]
+            ) {
+
+              acc[userId] = {
+
+                name:
+                  item.user?.name,
+
+                attendance:
+                  {},
+
+                P: 0,
+
+                HD: 0,
+
+                A: 0,
+              };
+            }
+
+            const day =
+              Number(
+                item.date.split(
+                  '-'
+                )[2]
+              );
+
+            acc[userId]
+              .attendance[day] =
+              item.status;
+
+            if (
+              item.status === 'P'
+            ) {
+              acc[userId].P++;
+            }
+
+            if (
+              item.status === 'HD'
+            ) {
+              acc[userId].HD++;
+            }
+
+            if (
+              item.status === 'A'
+            ) {
+              acc[userId].A++;
+            }
+
+            return acc;
+
+          },
+          {}
+        )
       );
 
-      doc.setFontSize(12);
+    const head = [[
+      'Employee',
 
-      doc.text(
-        `Date: ${date}`,
-        14,
-        30
+      ...Array.from(
+        {
+          length: daysInMonth,
+        },
+        (_, i) => i + 1
+      ),
+
+      'P',
+      'HD',
+      'A',
+      'Total',
+    ]];
+
+    const body =
+      groupedEmployees.map(
+        (employee) => {
+
+          const row = [
+
+            employee.name,
+          ];
+
+          for (
+            let day = 1;
+            day <= daysInMonth;
+            day++
+          ) {
+
+            let value =
+              employee
+                .attendance[
+                day
+              ] || '-';
+
+            if (
+              !employee
+                .attendance[
+                day
+              ]
+            ) {
+
+              const dateObj =
+                new Date(
+                  year,
+                  month - 1,
+                  day
+                );
+
+              if (
+                dateObj.getDay() === 0
+              ) {
+
+                value = 'Sun';
+
+              } else if (
+
+                dateObj.getDay() === 6 &&
+                day >= 8 &&
+                day <= 14
+
+              ) {
+
+                value = 'Off';
+              }
+            }
+
+            row.push(value);
+          }
+
+          row.push(
+            employee.P
+          );
+
+          row.push(
+            employee.HD
+          );
+
+          row.push(
+            employee.A
+          );
+
+          row.push(
+            employee.P +
+              employee.HD +
+              employee.A
+          );
+
+          return row;
+        }
       );
 
-      const selectedWarehouseName =
-        warehouses.find(
-          (w) =>
-            w._id ===
-            selectedWarehouse
-        )?.name || '';
+    autoTable(doc, {
 
-      doc.text(
-        `Warehouse: ${selectedWarehouseName}`,
-        14,
-        38
-      );
+      startY: 30,
 
-      autoTable(doc, {
+      head,
 
-        startY: 50,
+      body,
 
-        head: [[
-          'Employee',
-          'Email',
-          'Status',
-        ]],
+      styles: {
 
-        body:
-          attendanceData.map(
-            (item) => [
+        fontSize: 6,
 
-              item.user?.name,
+        halign: 'center',
 
-              item.user?.email,
+        valign: 'middle',
+      },
 
-              item.status
-                .replace(
-                  '_',
-                  ' '
-                )
-                .toUpperCase(),
+      headStyles: {
 
-            ]
-          ),
+        fillColor: [
+          49,
+          46,
+          129,
+        ],
 
-      });
+        textColor: 255,
 
-      doc.save(
-        `attendance-report-${date}.pdf`
-      );
-    };
+        fontSize: 6,
+      },
+
+      alternateRowStyles: {
+        fillColor: [
+          245,
+          245,
+          245,
+        ],
+      },
+
+      margin: {
+        left: 5,
+        right: 5,
+      },
+
+      tableWidth: 'auto',
+    });
+
+    doc.save(
+      `attendance-${month}-${year}.pdf`
+    );
+  };
 
   const handlePrint = () => {
 
     window.print();
 
   };
+
+  const daysInMonth =
+    new Date(
+      year,
+      month,
+      0
+    ).getDate();
+
+  const isSunday = (day) => {
+
+    const dateObj = new Date(
+      year,
+      month - 1,
+      day
+    );
+
+    return dateObj.getDay() === 0;
+  };
+
+  const isSecondSaturday =
+    (day) => {
+
+      const dateObj = new Date(
+        year,
+        month - 1,
+        day
+      );
+
+      return (
+        dateObj.getDay() === 6 &&
+        day >= 8 &&
+        day <= 14
+      );
+    };
 
   return (
 
@@ -246,6 +512,44 @@ const AttendanceHistory = () => {
         Attendance History
 
       </h2>
+
+      {/* REPORT TYPE */}
+
+      <div className="flex gap-4 mb-4">
+
+        <button
+          onClick={() =>
+            setReportType(
+              'daily'
+            )
+          }
+          className={`px-4 py-2 rounded ${
+            reportType ===
+            'daily'
+              ? 'bg-indigo-700 text-white'
+              : 'bg-gray-200'
+          }`}
+        >
+          Daily Report
+        </button>
+
+        <button
+          onClick={() =>
+            setReportType(
+              'monthly'
+            )
+          }
+          className={`px-4 py-2 rounded ${
+            reportType ===
+            'monthly'
+              ? 'bg-indigo-700 text-white'
+              : 'bg-gray-200'
+          }`}
+        >
+          Monthly Report
+        </button>
+
+      </div>
 
       {/* FILTERS */}
 
@@ -290,16 +594,91 @@ const AttendanceHistory = () => {
 
           </select>
 
-          <input
-            type="date"
-            value={date}
-            onChange={(e) =>
-              setDate(
-                e.target.value
-              )
-            }
-            className="border p-3 rounded"
-          />
+          {
+            reportType ===
+            'daily'
+
+            ? (
+
+              <input
+                type="date"
+                value={date}
+                onChange={(e) =>
+                  setDate(
+                    e.target.value
+                  )
+                }
+                className="border p-3 rounded"
+              />
+            )
+
+            : (
+
+              <div className="grid grid-cols-2 gap-4">
+
+                <select
+                  value={month}
+                  onChange={(e) =>
+                    setMonth(
+                      Number(
+                        e.target
+                          .value
+                      )
+                    )
+                  }
+                  className="border p-3 rounded"
+                >
+
+                  {
+                    Array.from(
+                      {
+                        length: 12,
+                      },
+                      (_, i) => (
+
+                        <option
+                          key={i + 1}
+                          value={i + 1}
+                        >
+
+                          {
+                            [
+                              'January',
+                              'February',
+                              'March',
+                              'April',
+                              'May',
+                              'June',
+                              'July',
+                              'August',
+                              'September',
+                              'October',
+                              'November',
+                              'December',
+                            ][i]
+                          }
+
+                        </option>
+                      )
+                    )
+                  }
+
+                </select>
+
+                <input
+                  type="number"
+                  value={year}
+                  onChange={(e) =>
+                    setYear(
+                      e.target.value
+                    )
+                  }
+                  className="border p-3 rounded"
+                />
+
+              </div>
+            )
+          }
 
         </div>
 
@@ -316,30 +695,34 @@ const AttendanceHistory = () => {
 
         <div className="bg-white shadow rounded-xl overflow-x-auto">
 
-          {/* TOP ACTIONS */}
-
           <div className="flex flex-wrap gap-3 p-4 border-b">
 
-            <button
-              onClick={() =>
-                setEditMode(
-                  !editMode
-                )
-              }
-              className="bg-yellow-500 text-white px-5 py-2 rounded hover:bg-yellow-600"
-            >
+            {
+              reportType ===
+                'daily' && (
 
-              {editMode
-                ? 'Cancel Edit'
-                : 'Edit Attendance'}
+                <button
+                  onClick={() =>
+                    setEditMode(
+                      !editMode
+                    )
+                  }
+                  className="bg-yellow-500 text-white px-5 py-2 rounded"
+                >
 
-            </button>
+                  {editMode
+                    ? 'Cancel Edit'
+                    : 'Edit Attendance'}
+
+                </button>
+              )
+            }
 
             <button
               onClick={
                 handleDownloadPDF
               }
-              className="bg-red-600 text-white px-5 py-2 rounded hover:bg-red-700"
+              className="bg-red-600 text-white px-5 py-2 rounded"
             >
 
               Download PDF
@@ -348,7 +731,7 @@ const AttendanceHistory = () => {
 
             <button
               onClick={handlePrint}
-              className="bg-blue-600 text-white px-5 py-2 rounded hover:bg-blue-700"
+              className="bg-blue-600 text-white px-5 py-2 rounded"
             >
 
               Print Report
@@ -357,141 +740,408 @@ const AttendanceHistory = () => {
 
           </div>
 
-          <table className="w-full">
+          {
+            reportType ===
+            'daily'
 
-            <thead>
+            ? (
 
-              <tr className="bg-indigo-900 text-white">
+              <table className="w-full">
 
-                <th className="py-3 px-4 text-left">
-                  Employee
-                </th>
+                <thead>
 
-                <th className="py-3 px-4 text-left">
-                  Email
-                </th>
+                  <tr className="bg-indigo-900 text-white">
 
-                <th className="py-3 px-4 text-left">
-                  Status
-                </th>
+                    <th className="py-3 px-4 text-left">
+                      Employee
+                    </th>
 
-              </tr>
+                    <th className="py-3 px-4 text-left">
+                      Email
+                    </th>
 
-            </thead>
-
-            <tbody>
-
-              {attendanceData.map(
-                (
-                  item,
-                  index
-                ) => (
-
-                  <tr
-                    key={item._id}
-                    className="border-b hover:bg-gray-50"
-                  >
-
-                    <td className="py-3 px-4 font-medium">
-
-                      {
-                        item.user
-                          ?.name
-                      }
-
-                    </td>
-
-                    <td className="py-3 px-4">
-
-                      {
-                        item.user
-                          ?.email
-                      }
-
-                    </td>
-
-                    <td className="py-3 px-4">
-
-                      {editMode ? (
-
-                        <select
-                          value={
-                            item.status
-                          }
-                          onChange={(e) =>
-                            handleStatusChange(
-                              index,
-                              e.target
-                                .value
-                            )
-                          }
-                          className="border p-2 rounded"
-                        >
-
-                          <option value="full_day">
-                            Full Day
-                          </option>
-
-                          <option value="half_day">
-                            Half Day
-                          </option>
-
-                          <option value="absent">
-                            Absent
-                          </option>
-
-                        </select>
-
-                      ) : (
-
-                        <span
-                          className={`px-3 py-1 rounded text-white text-sm ${
-                            item.status ===
-                            'full_day'
-                              ? 'bg-green-600'
-                              : item.status ===
-                                'half_day'
-                              ? 'bg-yellow-500'
-                              : 'bg-red-600'
-                          }`}
-                        >
-
-                          {item.status
-                            .replace(
-                              '_',
-                              ' '
-                            )
-                            .toUpperCase()}
-
-                        </span>
-
-                      )}
-
-                    </td>
+                    <th className="py-3 px-4 text-left">
+                      Status
+                    </th>
 
                   </tr>
 
-                )
-              )}
+                </thead>
 
-            </tbody>
+                <tbody>
 
-          </table>
+                  {attendanceData.map(
+                    (
+                      item,
+                      index
+                    ) => (
 
-          {editMode && (
+                      <tr
+                        key={item._id}
+                        className="border-b"
+                      >
 
-            <button
-              onClick={
-                handleSaveChanges
-              }
-              className="bg-indigo-700 text-white px-6 py-2 rounded m-4 hover:bg-indigo-800"
-            >
+                        <td className="py-3 px-4">
 
-              Save Changes
+                          {
+                            item.user
+                              ?.name
+                          }
 
-            </button>
+                        </td>
 
-          )}
+                        <td className="py-3 px-4">
+
+                          {
+                            item.user
+                              ?.email
+                          }
+
+                        </td>
+
+                        <td className="py-3 px-4">
+
+                          {editMode ? (
+
+                            <select
+                              value={
+                                item.status
+                              }
+                              onChange={(e) =>
+                                handleStatusChange(
+                                  index,
+                                  e.target
+                                    .value
+                                )
+                              }
+                              className="border p-2 rounded"
+                            >
+
+                              <option value="P">
+                                P
+                              </option>
+
+                              <option value="HD">
+                                HD
+                              </option>
+
+                              <option value="A">
+                                A
+                              </option>
+
+                            </select>
+
+                          ) : (
+
+                            <span
+                              className={`px-3 py-1 rounded text-white text-sm font-bold ${
+                                item.status ===
+                                'P'
+                                  ? 'bg-green-600'
+                                  : item.status ===
+                                    'HD'
+                                  ? 'bg-yellow-500'
+                                  : 'bg-red-600'
+                              }`}
+                            >
+
+                              {
+                                item.status
+                              }
+
+                            </span>
+
+                          )}
+
+                        </td>
+
+                      </tr>
+
+                    )
+                  )}
+
+                </tbody>
+
+              </table>
+
+            )
+
+            : (
+
+              <table className="w-full text-sm">
+
+                <thead>
+
+                  <tr className="bg-indigo-900 text-white">
+
+                    <th className="border p-2">
+                      Employee
+                    </th>
+
+                    {
+                      [...Array(daysInMonth)]
+                        .map(
+                          (_, index) => (
+
+                            <th
+                              key={index}
+                              className="border p-2"
+                            >
+                              {index + 1}
+                            </th>
+                          )
+                        )
+                    }
+
+                    <th className="border p-2">
+                      P
+                    </th>
+
+                    <th className="border p-2">
+                      HD
+                    </th>
+
+                    <th className="border p-2">
+                      A
+                    </th>
+
+                    <th className="border p-2">
+                      Total
+                    </th>
+
+                  </tr>
+
+                </thead>
+
+                <tbody>
+
+                  {
+
+                    Object.values(
+
+                      attendanceData.reduce(
+                        (
+                          acc,
+                          item
+                        ) => {
+
+                          const userId =
+                            item.user
+                              ?._id;
+
+                          if (
+                            !acc[userId]
+                          ) {
+
+                            acc[userId] = {
+                              name:
+                                item
+                                  .user
+                                  ?.name,
+
+                              attendance:
+                                {},
+
+                              P: 0,
+
+                              HD: 0,
+
+                              A: 0,
+                            };
+                          }
+
+                          const day =
+                            Number(
+                              item.date.split(
+                                '-'
+                              )[2]
+                            );
+
+                          acc[userId]
+                            .attendance[
+                              day
+                            ] =
+                            item.status;
+
+                          if (
+                            item.status ===
+                            'P'
+                          ) {
+                            acc[userId].P++;
+                          }
+
+                          if (
+                            item.status ===
+                            'HD'
+                          ) {
+                            acc[userId].HD++;
+                          }
+
+                          if (
+                            item.status ===
+                            'A'
+                          ) {
+                            acc[userId].A++;
+                          }
+
+                          return acc;
+
+                        },
+                        {}
+                      )
+                    ).map(
+                      (
+                        employee,
+                        index
+                      ) => (
+
+                        <tr
+                          key={index}
+                        >
+
+                          <td className="border p-2 font-semibold">
+
+                            {
+                              employee.name
+                            }
+
+                          </td>
+
+                          {
+                            [...Array(
+                              daysInMonth
+                            )].map(
+                              (
+                                _,
+                                index
+                              ) => {
+
+                                const day =
+                                  index +
+                                  1;
+
+                                return (
+
+                                  <td
+                                    key={
+                                      index
+                                    }
+                                    className="border p-1 text-center"
+                                  >
+
+                                    {
+                                      employee.attendance[day]
+
+                                      ? (
+
+                                        <span
+                                          className={`px-2 py-1 rounded text-white text-xs font-bold ${
+                                            employee.attendance[day] === 'P'
+                                              ? 'bg-green-600'
+
+                                              : employee.attendance[day] === 'HD'
+                                              ? 'bg-yellow-500'
+
+                                              : 'bg-red-600'
+                                          }`}
+                                        >
+
+                                          {
+                                            employee.attendance[day]
+                                          }
+
+                                        </span>
+
+                                      )
+
+                                      : isSunday(day)
+
+                                      ? (
+
+                                        <span className="bg-gray-500 text-white px-2 py-1 rounded text-xs font-bold">
+
+                                          Sun
+
+                                        </span>
+
+                                      )
+
+                                      : isSecondSaturday(day)
+
+                                      ? (
+
+                                        <span className="bg-blue-500 text-white px-2 py-1 rounded text-xs font-bold">
+
+                                          Off
+
+                                        </span>
+
+                                      )
+
+                                      : '-'
+                                    }
+
+                                  </td>
+                                );
+                              }
+                            )
+                          }
+
+                          <td className="border p-2 text-center font-bold text-green-600">
+                            {
+                              employee.P
+                            }
+                          </td>
+
+                          <td className="border p-2 text-center font-bold text-yellow-600">
+                            {
+                              employee.HD
+                            }
+                          </td>
+
+                          <td className="border p-2 text-center font-bold text-red-600">
+                            {
+                              employee.A
+                            }
+                          </td>
+
+                          <td className="border p-2 text-center font-bold text-indigo-700">
+
+                            {
+                              employee.P +
+                              employee.HD 
+                            }
+
+                          </td>
+
+                        </tr>
+                      )
+                    )
+                  }
+
+                </tbody>
+
+              </table>
+            )
+          }
+
+          {
+            editMode &&
+            reportType ===
+              'daily' && (
+
+              <button
+                onClick={
+                  handleSaveChanges
+                }
+                className="bg-indigo-700 text-white px-6 py-2 rounded m-4"
+              >
+
+                Save Changes
+
+              </button>
+            )
+          }
 
         </div>
 
@@ -506,7 +1156,6 @@ const AttendanceHistory = () => {
       )}
 
     </div>
-
   );
 };
 
